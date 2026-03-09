@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ 雷霆战机 v8.1.0 - 最终版</title>
+    <title>⚡ 雷霆战机 v7.0.0 - 最终版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -258,7 +258,7 @@
     <div id="startScreen">
         <div class="main-panel">
             <h1>⚡ 雷霆战机 ⚡</h1>
-            <div id="version">🌟 v8.1.0 - 最终版 🌟</div>
+            <div id="version">🌟 v7.0.0 - 最终版 🌟</div>
             
             <p>
                 🎮 触摸/鼠标控制飞机<br>
@@ -269,7 +269,7 @@
             </p>
             
             <div class="features">
-                <h3>✨ v8.1.0 特性</h3>
+                <h3>✨ v7.0.0 特性</h3>
                 <ul>
                     <li>🎨 完整美术资源系统</li>
                     <li>⚙️ 实时数值配置</li>
@@ -529,8 +529,6 @@
         });
         
         let gameRunning = false;
-        let powerUps = [];
-        const powerUpTypes = { h: { color: '#2ecc71' }, s: { color: '#3498db' }, p: { color: '#e74c3c' } };
         let score = 0, lives = 3, level = 1, gold = 0, exp = 0, expToLevel = 100;
         
         let playerUpgrades = { bulletSpeed: 1, bulletDamage: 1, fireRate: 1, bulletCount: 1, bulletSpread: 0, speed: 1 };
@@ -545,150 +543,6 @@
         };
         
         let bullets = [], enemies = [], enemyBullets = [], particles = [], gameStars = [];
-
-        // ==================== 道具系统 v8.1.0 ====================
-        const powerUpTypes = {
-            POWER: { name: '火力增强', color: '#ff6b6b', duration: 10000, effect: 'damage' },
-            SHIELD: { name: '护盾', color: '#4ecdc4', duration: 8000, effect: 'shield' },
-            HEALTH: { name: '生命恢复', color: '#2ecc71', duration: 0, effect: 'health' },
-            SLOW: { name: '时空减速', color: '#a29bfe', duration: 15000, effect: 'slow' },
-            DOUBLE: { name: '金币加倍', color: '#f39c12', duration: 20000, effect: 'double' }
-        };
-        
-        let activePowerUps = {};
-        let powerUpEffectTimer = null;
-        
-        function spawnPowerUp(x, y) {
-            if (Math.random() > 0.3) return; // 30% 掉落率
-            const types = Object.keys(powerUpTypes);
-            const type = types[Math.floor(Math.random() * types.length)];
-            powerUps.push({
-                x, y, type,
-                width: 25, height: 25,
-                speed: 2,
-                pulse: 0
-            });
-        }
-        
-        function applyPowerUp(type) {
-            const config = powerUpTypes[type];
-            console.log('🎁 获得道具:', config.name);
-            
-            if (config.effect === 'health') {
-                player.health = Math.min(player.health + 1, player.maxHealth);
-            } else if (config.effect === 'damage') {
-                player.damage = player.baseDamage * 2;
-                activePowerUps.POWER = Date.now() + config.duration;
-            } else if (config.effect === 'shield') {
-                player.shield = true;
-                activePowerUps.SHIELD = Date.now() + config.duration;
-            } else if (config.effect === 'slow') {
-                activePowerUps.SLOW = Date.now() + config.duration;
-                enemySpeedMultiplier = 0.5;
-            } else if (config.effect === 'double') {
-                activePowerUps.DOUBLE = Date.now() + config.duration;
-            }
-        }
-        
-        function updatePowerUps() {
-            const now = Date.now();
-            if (activePowerUps.POWER && now > activePowerUps.POWER) {
-                player.damage = player.baseDamage;
-                delete activePowerUps.POWER;
-            }
-            if (activePowerUps.SHIELD && now > activePowerUps.SHIELD) {
-                player.shield = false;
-                delete activePowerUps.SHIELD;
-            }
-            if (activePowerUps.SLOW && now > activePowerUps.SLOW) {
-                enemySpeedMultiplier = 1.0;
-                delete activePowerUps.SLOW;
-            }
-            if (activePowerUps.DOUBLE && now > activePowerUps.DOUBLE) {
-                delete activePowerUps.DOUBLE;
-            }
-        }
-        
-        let enemySpeedMultiplier = 1.0;
-        
-        // ==================== 连击系统 v8.1.0 ====================
-        let combo = 0;
-        let comboTimer = 0;
-        let maxCombo = 0;
-        let comboDisplay = '';
-        
-        function addCombo() {
-            combo++;
-            comboTimer = Date.now() + 3000; // 3 秒内继续连击
-            if (combo > maxCombo) maxCombo = combo;
-            
-            if (combo >= 50) comboDisplay = '🔥 连击之神!';
-            else if (combo >= 30) comboDisplay = '💀 连击大师!';
-            else if (combo >= 20) comboDisplay = '⚡ 连击高手!';
-            else if (combo >= 10) comboDisplay = '✨ 连击启动!';
-            else comboDisplay = '';
-        }
-        
-        function updateCombo() {
-            if (comboTimer > 0 && Date.now() > comboTimer && combo > 0) {
-                combo = 0;
-                comboDisplay = '';
-            }
-        }
-        
-        function getComboMultiplier() {
-            return Math.min(1 + combo * 0.1, 10); // 最高 10x
-        }
-        
-        // ==================== 成就系统 v8.1.0 ====================
-        const achievements = [
-            { id: 'first_blood', name: '首杀', desc: '击毁第一架敌机', unlocked: false, condition: (stats) => stats.kills >= 1 },
-            { id: 'combo_10', name: '连击高手', desc: '达成 10 连击', unlocked: false, condition: (stats) => stats.maxCombo >= 10 },
-            { id: 'combo_30', name: '连击大师', desc: '达成 30 连击', unlocked: false, condition: (stats) => stats.maxCombo >= 30 },
-            { id: 'combo_50', name: '连击之神', desc: '达成 50 连击', unlocked: false, condition: (stats) => stats.maxCombo >= 50 },
-            { id: 'survivor_5min', name: '幸存者', desc: '存活 5 分钟', unlocked: false, condition: (stats) => stats.survivalTime >= 300 },
-            { id: 'killer_100', name: '杀手', desc: '击毁 100 架敌机', unlocked: false, condition: (stats) => stats.kills >= 100 },
-            { id: 'killer_500', name: '屠戮者', desc: '击毁 500 架敌机', unlocked: false, condition: (stats) => stats.kills >= 500 },
-            { id: 'score_10000', name: '高分王', desc: '单局得分 10000', unlocked: false, condition: (stats) => stats.highScore >= 10000 },
-            { id: 'score_50000', name: '传奇', desc: '单局得分 50000', unlocked: false, condition: (stats) => stats.highScore >= 50000 },
-            { id: 'gold_1000', name: '富翁', desc: '累计获得 1000 金币', unlocked: false, condition: (stats) => stats.totalGold >= 1000 }
-        ];
-        
-        let gameStats = {
-            kills: 0,
-            maxCombo: 0,
-            survivalTime: 0,
-            highScore: 0,
-            totalGold: 0
-        };
-        
-        function checkAchievements() {
-            achievements.forEach(ach => {
-                if (!ach.unlocked && ach.condition(gameStats)) {
-                    ach.unlocked = true;
-                    console.log('🏆 解锁成就:', ach.name, '-', ach.desc);
-                    saveAchievements();
-                }
-            });
-        }
-        
-        function saveAchievements() {
-            try {
-                const unlocked = achievements.filter(a => a.unlocked).map(a => a.id);
-                localStorage.setItem('thunder_achievements', JSON.stringify(unlocked));
-            } catch(e) {}
-        }
-        
-        function loadAchievements() {
-            try {
-                const unlocked = JSON.parse(localStorage.getItem('thunder_achievements') || '[]');
-                achievements.forEach(a => {
-                    if (unlocked.includes(a.id)) a.unlocked = true;
-                });
-            } catch(e) {}
-        }
-
-
         
         const upgradePool = [
             { id: 'bulletSpeed', name: '🚀 子弹加速', desc: '子弹速度 +20%', apply: () => { playerUpgrades.bulletSpeed += 0.2; } },
@@ -1020,29 +874,6 @@
             drawEnemies();
             drawEnemyBullets();
             drawParticles();
-        // 渲染道具
-        powerUps.forEach(p => {
-            const config = powerUpTypes[p.type];
-            p.pulse += 0.1;
-            const pulseSize = Math.sin(p.pulse) * 3;
-            
-            ctx.fillStyle = config.color;
-            ctx.beginPath();
-            ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2 + pulseSize, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 发光效果
-            ctx.shadowColor = config.color;
-            ctx.shadowBlur = 15;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            
-            // 文字标签
-            ctx.fillStyle = '#fff';
-            ctx.font = '10px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(p.type[0], p.x + p.width/2, p.y + p.height/2 + 4);
-        });
             
             bullets.forEach((bullet, bulletIndex) => {
                 enemies.forEach((enemy, enemyIndex) => {

@@ -406,6 +406,7 @@
         
         // 加载配置
         function loadConfig() {
+            try {
             const saved = localStorage.getItem('thunder_config');
             if (saved) {
                 gameConfig = { ...gameConfig, ...JSON.parse(saved) };
@@ -422,6 +423,7 @@
             document.getElementById('cfg_enemySpawn_val').textContent = gameConfig.enemySpawn;
             document.getElementById('cfg_enemyHealth').value = gameConfig.enemyHealth;
             document.getElementById('cfg_gravity').value = gameConfig.gravity;
+            } catch(e) { console.log('Config UI not loaded'); }
         }
         
         // 保存配置

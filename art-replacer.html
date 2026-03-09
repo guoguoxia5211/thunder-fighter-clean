@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 雷霆战机 - 美术替换系统 v2.0</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); 
+            color: #fff; 
+            font-family: 'Arial', sans-serif; 
+            padding: 20px; 
+            min-height: 100vh; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #00d2ff; 
+            margin-bottom: 10px; 
+            font-size: 36px; 
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5); 
+        }
+        .subtitle { 
+            text-align: center; 
+            color: #3a7bd5; 
+            margin-bottom: 30px; 
+            font-size: 16px; 
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        .help-box { 
+            background: rgba(52, 152, 219, 0.1); 
+            border: 2px solid #3498db; 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin-bottom: 30px; 
+        }
+        .help-box h3 { color: #3498db; margin-bottom: 10px; }
+        .help-box p { color: #ecf0f1; line-height: 1.8; }
+        
+        .category { 
+            background: rgba(0, 210, 255, 0.1); 
+            border: 2px solid rgba(0, 210, 255, 0.3); 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin-bottom: 30px; 
+        }
+        .category-title { 
+            color: #00d2ff; 
+            font-size: 24px; 
+            margin-bottom: 20px; 
+            padding-bottom: 10px; 
+            border-bottom: 2px solid rgba(0, 210, 255, 0.3); 
+        }
+        .asset-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 20px; 
+        }
+        .asset-item { 
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.85)); 
+            border: 2px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 15px; 
+            padding: 20px; 
+        }
+        .asset-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .asset-name {
+            color: #00d2ff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .asset-dims {
+            color: #f39c12;
+            font-size: 12px;
+            background: rgba(243, 156, 18, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+        .asset-content {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+        .asset-panel { text-align: center; }
+        .asset-canvas { 
+            background: rgba(0,0,0,0.5); 
+            border-radius: 10px; 
+            margin-bottom: 10px; 
+            border: 2px solid rgba(255,255,255,0.1); 
+            transition: all 0.3s;
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+        }
+        .asset-canvas.success { 
+            border-color: #2ecc71; 
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.5); 
+        }
+        .asset-canvas.deployed { 
+            border-color: #f39c12; 
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.5); 
+        }
+        .asset-label { 
+            font-size: 12px; 
+            color: #95a5a6; 
+            margin-bottom: 5px; 
+        }
+        .arrow { 
+            font-size: 30px; 
+            color: #f39c12; 
+            text-align: center; 
+        }
+        .upload-area { 
+            border: 2px dashed rgba(0, 210, 255, 0.5); 
+            border-radius: 10px; 
+            padding: 15px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .upload-area:hover { 
+            border-color: #00d2ff; 
+            background: rgba(0, 210, 255, 0.1); 
+        }
+        .upload-area.uploading { 
+            border-color: #f39c12; 
+            background: rgba(243, 156, 18, 0.1); 
+            animation: pulse 1s infinite; 
+        }
+        .upload-area.uploaded { 
+            border-color: #2ecc71; 
+            background: rgba(46, 204, 113, 0.1); 
+        }
+        @keyframes pulse { 
+            0%, 100% { opacity: 1; } 
+            50% { opacity: 0.6; } 
+        }
+        .upload-area input { display: none; }
+        .upload-preview {
+            max-width: 80px;
+            max-height: 80px;
+            margin-top: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .upload-status {
+            margin-top: 10px;
+            font-size: 12px;
+            min-height: 30px;
+        }
+        .deploy-btn { 
+            background: linear-gradient(45deg, #f39c12, #e67e22); 
+            border: none; 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            margin-top: 10px; 
+            width: 100%;
+        }
+        .deploy-btn:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 5px 20px rgba(243, 156, 18, 0.5); 
+        }
+        .deploy-btn:disabled { 
+            background: #95a5a6; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none; 
+        }
+        .deploy-btn.deployed { 
+            background: linear-gradient(45deg, #27ae60, #2ecc71); 
+            cursor: default; 
+        }
+        .game-link { 
+            background: linear-gradient(45deg, #9b59b6, #8e44ad); 
+            border: none; 
+            color: white; 
+            padding: 15px 30px; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px; 
+            margin: 20px auto; 
+            display: block; 
+            text-decoration: none; 
+            text-align: center; 
+            box-shadow: 0 5px 25px rgba(155, 89, 182, 0.5); 
+        }
+        .game-link:hover { 
+            transform: scale(1.05); 
+            box-shadow: 0 10px 35px rgba(155, 89, 182, 0.7); 
+        }
+        .toast { 
+            position: fixed; 
+            top: 80px; 
+            right: 20px; 
+            background: rgba(46, 204, 113, 0.95); 
+            color: white; 
+            padding: 15px 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 5px 25px rgba(46, 204, 113, 0.5); 
+            z-index: 1000; 
+            transform: translateX(400px); 
+            transition: transform 0.3s ease; 
+            max-width: 400px; 
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.error { 
+            background: rgba(231, 76, 60, 0.95); 
+            box-shadow: 0 5px 25px rgba(231, 76, 60, 0.5); 
+        }
+        .toast.deploy { 
+            background: rgba(243, 156, 18, 0.95); 
+            box-shadow: 0 5px 25px rgba(243, 156, 18, 0.5); 
+        }
+        
+        @media (max-width: 768px) {
+            .asset-grid { grid-template-columns: 1fr !important; }
+            .asset-content { grid-template-columns: 1fr !important; }
+            .arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 雷霆战机 - 美术替换系统</h1>
+        <p class="subtitle">一键替换 + 自动部署到 GitHub</p>
+        
+        <a href="https://guoguoxia5211.github.io/thunder-fighter-game/" target="_blank" class="game-link">🎮 打开游戏验证效果</a>
+        
+        <div class="help-box">
+            <h3>📌 使用说明</h3>
+            <p>
+                ✅ <strong>1. 上传新美术：</strong>点击上传区域选择图片（会自动验证尺寸）<br>
+                ✅ <strong>2. 本地预览：</strong>上传后可以预览效果<br>
+                ✅ <strong>3. 替换并部署：</strong>点击"替换并部署到游戏"按钮<br>
+                ✅ <strong>4. 打开游戏：</strong>点击上方按钮验证效果<br>
+                ⚠️ <strong>注意：</strong>GitHub Pages 有 1-2 分钟缓存，部署后请等待再刷新
+            </p>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">✈️ 玩家飞机</h2>
+            <div class="asset-grid" id="playerAssets"></div>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">👾 敌机</h2>
+            <div class="asset-grid" id="enemyAssets"></div>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">💫 子弹特效</h2>
+            <div class="asset-grid" id="bulletAssets"></div>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">💥 爆炸特效</h2>
+            <div class="asset-grid" id="explosionAssets"></div>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">🎯 UI 元素</h2>
+            <div class="asset-grid" id="uiAssets"></div>
+        </div>
+        
+        <div class="category">
+            <h2 class="category-title">🌌 背景</h2>
+            <div class="asset-grid" id="bgAssets"></div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // 美术资源定义
+        const ART_ASSETS = {
+            player: [
+                { id: 'player_classic', name: '经典玩家飞机', path: 'assets/player/classic.png', width: 50, height: 60 },
+                { id: 'player_elite', name: '精英玩家飞机', path: 'assets/player/elite.png', width: 60, height: 70 }
+            ],
+            enemy: [
+                { id: 'enemy_small', name: '小型敌机', path: 'assets/enemy/small.png', width: 30, height: 30 },
+                { id: 'enemy_medium', name: '中型敌机', path: 'assets/enemy/medium.png', width: 45, height: 45 },
+                { id: 'enemy_large', name: '大型敌机', path: 'assets/enemy/large.png', width: 60, height: 60 },
+                { id: 'enemy_elite', name: '精英敌机', path: 'assets/enemy/elite.png', width: 70, height: 70 },
+                { id: 'enemy_boss', name: 'Boss 敌机', path: 'assets/enemy/boss.png', width: 100, height: 100 }
+            ],
+            bullet: [
+                { id: 'bullet_player', name: '玩家子弹', path: 'assets/bullet/player.png', width: 6, height: 20 },
+                { id: 'bullet_enemy', name: '敌机子弹', path: 'assets/bullet/enemy.png', width: 8, height: 8 }
+            ],
+            explosion: [
+                { id: 'explosion_small', name: '小型爆炸', path: 'assets/explosion/small.png', width: 40, height: 40 },
+                { id: 'explosion_large', name: '大型爆炸', path: 'assets/explosion/large.png', width: 80, height: 80 }
+            ],
+            ui: [
+                { id: 'ui_healthbar', name: '血条 UI', path: 'assets/ui/healthbar.png', width: 200, height: 20 },
+                { id: 'ui_coin', name: '金币图标', path: 'assets/ui/coin.png', width: 32, height: 32 },
+                { id: 'ui_button', name: '按钮 UI', path: 'assets/ui/button.png', width: 150, height: 50 }
+            ],
+            bg: [
+                { id: 'bg_space', name: '太空背景', path: 'assets/bg/space.png', width: 1920, height: 1080 },
+                { id: 'bg_stars', name: '星星图层', path: 'assets/bg/stars.png', width: 1920, height: 1080 }
+            ]
+        };
+        
+        // GitHub 配置
+        const GITHUB_REPO = 'guoguoxia5211/thunder-fighter-game';
+        const GITHUB_TOKEN = 'REPLACE_WITH_YOUR_TOKEN';
+        const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/main/';
+        
+        let uploadedFiles = {};
+        let deployedFiles = new Set();
+        
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 渲染资源
+        function renderAssets() {
+            renderCategory('player', ART_ASSETS.player);
+            renderCategory('enemy', ART_ASSETS.enemy);
+            renderCategory('bullet', ART_ASSETS.bullet);
+            renderCategory('explosion', ART_ASSETS.explosion);
+            renderCategory('ui', ART_ASSETS.ui);
+            renderCategory('bg', ART_ASSETS.bg);
+        }
+        
+        function renderCategory(categoryId, assets) {
+            const container = document.getElementById(categoryId + 'Assets');
+            container.innerHTML = '';
+            
+            assets.forEach(asset => {
+                const item = document.createElement('div');
+                item.className = 'asset-item';
+                
+                const currentUrl = GITHUB_BASE_URL + asset.path + '?t=' + Date.now();
+                
+                item.innerHTML = `
+                    <div class="asset-header">
+                        <span class="asset-name">${asset.name}</span>
+                        <span class="asset-dims">${asset.width}×${asset.height}px</span>
+                    </div>
+                    <div class="asset-content">
+                        <div class="asset-panel">
+                            <div class="asset-label">当前资源</div>
+                            <img class="asset-canvas" id="current_${asset.id}" src="${currentUrl}" alt="${asset.name}" 
+                                onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22${asset.width}%22 height=%22${asset.height}%22><rect fill=%22%23333%22 width=%22100%25%22 height=%22100%25%22/><text fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2212%22>加载中</text></svg>'">
+                        </div>
+                        <div class="arrow">➜</div>
+                        <div class="asset-panel">
+                            <div class="asset-label">上传新资源</div>
+                            <div class="upload-area" id="upload_area_${asset.id}">
+                                📁 点击上传<br>
+                                <span style="font-size:10px;color:#95a5a6;">要求：${asset.width}×${asset.height}px</span>
+                                <img class="upload-preview" id="preview_${asset.id}" alt="">
+                                <input type="file" id="upload_${asset.id}" accept="image/*" onchange="handleUpload('${asset.id}', this, '${asset.path}', ${asset.width}, ${asset.height})">
+                            </div>
+                            <div class="upload-status" id="status_${asset.id}"></div>
+                            <button class="deploy-btn" id="deploy_btn_${asset.id}" onclick="deployResource('${asset.id}', '${asset.path}')" disabled>🚀 替换并部署到游戏</button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+                
+                // 绑定点击事件
+                const uploadArea = item.querySelector(`#upload_area_${asset.id}`);
+                uploadArea.onclick = function(e) {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'IMG') {
+                        item.querySelector(`#upload_${asset.id}`).click();
+                    }
+                };
+            });
+        }
+        
+        // 验证图片尺寸
+        function validateImageSize(file, requiredWidth, requiredHeight) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    if (img.width !== requiredWidth || img.height !== requiredHeight) {
+                        reject(`尺寸不符：需要${requiredWidth}×${requiredHeight}px，实际${img.width}×${img.height}px`);
+                    } else {
+                        resolve(img);
+                    }
+                };
+                img.onerror = () => reject('图片加载失败');
+                img.src = URL.createObjectURL(file);
+            });
+        }
+        
+        // 处理上传
+        async function handleUpload(id, input, targetPath, requiredWidth, requiredHeight) {
+            const uploadArea = document.getElementById(`upload_area_${id}`);
+            const previewImg = document.getElementById(`preview_${id}`);
+            const statusDiv = document.getElementById(`status_${id}`);
+            const deployBtn = document.getElementById(`deploy_btn_${id}`);
+            
+            if (!input.files || !input.files[0]) { 
+                showToast('请选择文件', 'error'); 
+                return; 
+            }
+            
+            const file = input.files[0];
+            
+            // 验证文件格式
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
+            if (!validTypes.includes(file.type)) { 
+                statusDiv.innerHTML = '<span style="color:#e74c3c;">❌ 不支持的格式，请使用 PNG/JPG/WEBP</span>'; 
+                return; 
+            }
+            
+            uploadArea.classList.add('uploading');
+            statusDiv.innerHTML = '<span style="color:#f39c12;">⏳ 验证中...</span>';
+            
+            try {
+                // 验证尺寸
+                await validateImageSize(file, requiredWidth, requiredHeight);
+                
+                // 读取文件
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result;
+                    uploadedFiles[id] = {
+                        dataUrl: base64Data,
+                        base64Content: base64Data.split(',')[1],
+                        originalName: file.name,
+                        targetPath: targetPath,
+                        fileType: file.type,
+                        fileSize: file.size
+                    };
+                    
+                    // 显示预览
+                    previewImg.src = base64Data;
+                    previewImg.style.display = 'block';
+                    
+                    uploadArea.classList.remove('uploading');
+                    uploadArea.classList.add('uploaded');
+                    uploadArea.innerHTML = `✅ 已上传<br><span style="font-size:10px;">${file.name}</span>`;
+                    uploadArea.appendChild(previewImg);
+                    
+                    statusDiv.innerHTML = '<span style="color:#2ecc71;">✅ 验证通过，可以部署</span>';
+                    deployBtn.disabled = false;
+                    
+                    showToast('✅ 验证通过！可以部署到游戏');
+                };
+                reader.onerror = function() {
+                    uploadArea.classList.remove('uploading');
+                    statusDiv.innerHTML = '<span style="color:#e74c3c;">❌ 文件读取失败</span>';
+                    showToast('文件读取失败', 'error');
+                };
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                uploadArea.classList.remove('uploading');
+                statusDiv.innerHTML = `<span style="color:#e74c3c;">❌ ${error}</span>`;
+                showToast(error, 'error');
+            }
+        }
+        
+        // 部署资源
+        async function deployResource(id, targetPath) {
+            if (!uploadedFiles[id]) { 
+                showToast('请先上传图片', 'error'); 
+                return; 
+            }
+            
+            const deployBtn = document.getElementById(`deploy_btn_${id}`);
+            const asset = Object.values(ART_ASSETS).flat().find(a => a.id === id);
+            
+            deployBtn.disabled = true;
+            deployBtn.textContent = '⏳ 获取文件信息...';
+            
+            try {
+                // 获取文件 SHA
+                let fileSha = null;
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${targetPath}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    fileSha = data.sha;
+                }
+                
+                deployBtn.textContent = '⏳ 部署中...';
+                
+                // 上传到 GitHub
+                const uploadResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${targetPath}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        message: `Update ${asset.name}`, 
+                        content: uploadedFiles[id].base64Content,
+                        sha: fileSha
+                    })
+                });
+                
+                if (!uploadResponse.ok) { 
+                    const err = await uploadResponse.json(); 
+                    throw new Error(`GitHub API ${uploadResponse.status}: ${err.message}`); 
+                }
+                
+                deployedFiles.add(id);
+                deployBtn.disabled = true;
+                deployBtn.textContent = '✅ 已部署到游戏';
+                deployBtn.classList.add('deployed');
+                
+                // 更新当前资源图片
+                const currentImg = document.getElementById(`current_${id}`);
+                currentImg.src = GITHUB_BASE_URL + targetPath + '?t=' + Date.now();
+                currentImg.classList.add('deployed');
+                
+                showToast('✅ 已部署！等待 1-2 分钟后刷新游戏页面', 'deploy');
+                
+                // 通知游戏页面配置已更新
+                window.postMessage({ 
+                    type: 'UPDATE_CONFIG', 
+                    config: { lastUpdate: Date.now() } 
+                }, '*');
+                
+            } catch (error) {
+                deployBtn.disabled = false;
+                deployBtn.textContent = '🚀 替换并部署到游戏';
+                showToast(`❌ 部署失败：${error.message}`, 'error');
+            }
+        }
+        
+        // 初始化
+        renderAssets();
+    </script>
+</body>
+</html>

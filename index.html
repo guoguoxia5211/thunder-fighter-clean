@@ -529,6 +529,8 @@
         });
         
         let gameRunning = false;
+        let powerUps = [];
+        const powerUpTypes = { h: { color: '#2ecc71' }, s: { color: '#3498db' }, p: { color: '#e74c3c' } };
         let score = 0, lives = 3, level = 1, gold = 0, exp = 0, expToLevel = 100;
         
         let playerUpgrades = { bulletSpeed: 1, bulletDamage: 1, fireRate: 1, bulletCount: 1, bulletSpread: 0, speed: 1 };

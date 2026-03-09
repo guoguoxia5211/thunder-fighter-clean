@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ 雷霆战机 v8.1.1 - 白屏修复版</title>
+    <title>⚡ 雷霆战机 v8.1.2 - 渲染修复版</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
@@ -259,7 +259,7 @@
     <div id="startScreen">
         <div class="main-panel">
             <h1>⚡ 雷霆战机 ⚡</h1>
-            <div id="version">🌟 v8.1.1 - 白屏修复版 🌟</div>
+            <div id="version">🌟 v8.1.2 - 渲染修复版 🌟</div>
             
             <p>
                 🎮 触摸/鼠标控制飞机<br>
@@ -390,9 +390,17 @@
         function resizeCanvas() {
             canvas.width = Math.min(window.innerWidth * 0.95, 480);
             canvas.height = window.innerHeight;
+            // 确保 canvas 可见
+            canvas.style.display = 'block';
+            canvas.style.margin = '0 auto';
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+        
+        // 延迟启动确保 canvas 已渲染
+        setTimeout(() => {
+            console.log('Canvas initialized:', canvas.width, 'x', canvas.height);
+        }, 100);
         
         // 游戏配置 - 支持本地存储和外部配置
         let gameConfig = {

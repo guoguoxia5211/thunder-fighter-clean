@@ -3,1360 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ 雷霆战机 v10.9.0 - 最终版</title>
+    <title>末日防线：代号曙光 v3.2.0</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            overflow: hidden; 
-            touch-action: none; 
-            font-family: 'Arial', sans-serif;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-        }
+        :root { --neon-blue: #00f3ff; --neon-purple: #bc13fe; --neon-orange: #ff6b35; --neon-red: #ff4444; --neon-green: #00ff88; --glass-bg: rgba(20,30,40,0.85); --text-secondary: #a0a0a0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #0a0a0f, #1a1a2e); color: white; overflow: hidden; width: 100vw; height: 100vh; }
+        #game-container { position: relative; width: 100%; height: 100%; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
+        .screen.active { display: flex; }
         
-        .bg-stars {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .star {
-            position: absolute;
-            background: #fff;
-            border-radius: 50%;
-            animation: twinkle 2s infinite;
-        }
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-        }
+        /* 加载界面 */
+        #loading-screen { justify-content: center; align-items: center; }
+        .loading-content { text-align: center; padding: 40px; }
+        .game-title { font-size: 48px; background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 40px; }
+        .loading-bar { width: 300px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: 20px auto; border: 1px solid rgba(0,243,255,0.3); }
+        .loading-progress { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); transition: width 0.3s; }
+        .loading-text { color: var(--text-secondary); font-size: 16px; margin-top: 15px; }
         
-        #gameCanvas { 
-            display: block; 
-            margin: 0 auto; 
-            background: transparent;
-            position: relative;
-            z-index: 5;
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-        }
+        /* 主界面 */
+        #main-menu { background: radial-gradient(circle at 20% 80%, rgba(188,19,254,0.15), transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,243,255,0.15), transparent 50%); flex-direction: column; justify-content: center; align-items: center; }
+        .menu-content { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .game-title-glow { font-size: 52px; background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .subtitle { font-size: 18px; color: var(--neon-blue); letter-spacing: 8px; margin-bottom: 40px; text-transform: uppercase; }
+        .player-info { background: var(--glass-bg); border: 1px solid rgba(0,243,255,0.3); border-radius: 12px; padding: 20px 30px; margin-bottom: 30px; min-width: 280px; }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .info-row:last-child { border-bottom: none; }
+        .info-row .label { color: var(--text-secondary); font-size: 14px; }
+        .info-row .value { color: white; font-weight: bold; font-size: 16px; }
+        .info-row .value.currency { color: var(--neon-orange); }
+        .menu-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 320px; }
+        .btn { padding: 18px 60px; font-size: 22px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; margin: 5px; }
+        .btn-primary { background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); color: white; box-shadow: 0 0 20px rgba(0,243,255,0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,243,255,0.6); }
+        .btn-secondary { background: var(--glass-bg); color: white; border: 2px solid var(--neon-blue); }
+        .btn-secondary:hover { background: rgba(0,243,255,0.15); border-color: var(--neon-blue); transform: translateY(-2px); }
+        .version { position: absolute; bottom: 20px; right: 20px; color: var(--text-secondary); font-size: 12px; opacity: 0.6; }
         
-        #ui {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            color: #fff;
-            font-size: 16px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            z-index: 15;
-            background: rgba(0,0,0,0.5);
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
+        /* 其他场景 */
+        .btn-back { position: absolute; top: 20px; left: 20px; z-index: 100; width: 50px; height: 50px; border-radius: 50%; background: rgba(0,243,255,0.2); border: 2px solid var(--neon-blue); color: var(--neon-blue); font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .scene-title { font-size: 42px; background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 40px; text-align: center; }
+        .scene-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px 20px; width: 100%; max-width: 600px; margin: 0 auto; }
+        .feature-card { background: var(--glass-bg); border: 1px solid rgba(0,243,255,0.3); border-radius: 16px; padding: 30px; margin: 15px; width: 100%; text-align: center; }
+        .feature-card h3 { color: var(--neon-blue); margin-bottom: 15px; font-size: 24px; }
+        .feature-card p { color: var(--text-secondary); line-height: 1.6; }
         
-        #startScreen, #gameOverScreen, #configScreen, #skinScreen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(15, 52, 96, 0.9);
-            z-index: 20;
-            padding: 20px;
-            overflow-y: auto;
-        }
+        /* 战斗画布 */
+        #game-canvas { display: none; background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%); }
+        #game-canvas.active { display: block; }
         
-        h1 {
-            font-size: clamp(32px, 8vw, 52px);
-            background: linear-gradient(45deg, #e94560, #f39c12, #3498db, #e94560);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-align: center;
-            margin-bottom: 10px;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
+        /* 战斗 UI */
+        #battle-ui { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #battle-ui.active { display: block; }
+        .ui-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .hp-bar { width: 200px; height: 20px; background: rgba(0,0,0,0.5); border: 2px solid #333; border-radius: 10px; overflow: hidden; }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, var(--neon-red), var(--neon-orange)); transition: width 0.3s; }
+        .wave-info { text-align: center; }
+        .wave-num { font-size: 24px; font-weight: bold; color: var(--neon-blue); }
+        .wave-label { font-size: 12px; color: #888; }
+        .score-info { text-align: right; }
+        .score-num { font-size: 20px; color: var(--neon-orange); }
         
-        #version {
-            color: #f39c12;
-            font-size: clamp(14px, 4vw, 16px);
-            margin-bottom: 20px;
-            text-align: center;
-        }
+        /* 经验条 */
+        .exp-bar-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 400px; }
+        .exp-bar { width: 100%; height: 12px; background: rgba(0,0,0,0.5); border: 2px solid #333; border-radius: 6px; overflow: hidden; }
+        .exp-fill { height: 100%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue)); transition: width 0.3s; }
+        .exp-text { text-align: center; font-size: 12px; color: white; margin-top: 5px; }
         
-        .main-panel {
-            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.9));
-            border-radius: 20px;
-            padding: clamp(20px, 5vw, 35px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            border: 2px solid rgba(233, 69, 96, 0.3);
-            text-align: center;
-            max-width: min(500px, 95vw);
-            position: relative;
-            z-index: 10;
-            margin: 10px;
-        }
+        .btn-pause { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; background: rgba(0,243,255,0.2); border: 2px solid var(--neon-blue); border-radius: 8px; color: var(--neon-blue); font-size: 20px; cursor: pointer; pointer-events: auto; }
         
-        .main-panel p {
-            color: #ecf0f1;
-            font-size: clamp(14px, 4vw, 15px);
-            margin-bottom: 20px;
-            line-height: 1.8;
-        }
+        /* 升级/选择弹窗 */
+        #levelup-modal, #start-select-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; pointer-events: auto; z-index: 2000; }
+        #levelup-modal.active, #start-select-modal.active { display: flex; }
+        .levelup-content { text-align: center; max-width: 900px; }
+        .levelup-title { font-size: 56px; color: var(--neon-orange); margin-bottom: 10px; text-shadow: 0 0 20px var(--neon-orange); }
+        .levelup-subtitle { font-size: 24px; color: var(--neon-blue); margin-bottom: 40px; }
+        .skill-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .skill-card { width: 260px; background: var(--glass-bg); border: 3px solid var(--neon-blue); border-radius: 16px; padding: 25px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+        .skill-card:hover { transform: translateY(-10px); box-shadow: 0 0 30px rgba(0,243,255,0.6); border-color: var(--neon-orange); }
+        .skill-card.common { border-color: #b0b0b0; }
+        .skill-card.rare { border-color: #5e9eff; }
+        .skill-card.epic { border-color: var(--neon-purple); }
+        .skill-card.legendary { border-color: var(--neon-orange); box-shadow: 0 0 20px rgba(255,107,53,0.4); }
+        .skill-icon { font-size: 48px; margin-bottom: 15px; }
+        .skill-name { font-size: 22px; font-weight: bold; color: white; margin-bottom: 10px; }
+        .skill-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 15px; }
+        .skill-rarity { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+        .skill-card.common .skill-rarity { color: #b0b0b0; }
+        .skill-card.rare .skill-rarity { color: #5e9eff; }
+        .skill-card.epic .skill-rarity { color: var(--neon-purple); }
+        .skill-card.legendary .skill-rarity { color: var(--neon-orange); }
         
-        .features {
-            background: rgba(233, 69, 96, 0.1);
-            border: 2px solid rgba(233, 69, 96, 0.3);
-            border-radius: 12px;
-            padding: 12px;
-            margin: 15px 0;
-            text-align: left;
-        }
-        .features h3 {
-            color: #e94560;
-            margin-bottom: 10px;
-            font-size: clamp(14px, 4vw, 15px);
-        }
-        .features ul {
-            color: #ecf0f1;
-            font-size: clamp(11px, 3vw, 13px);
-            padding-left: 20px;
-        }
-        .features li {
-            margin: 6px 0;
-            list-style-type: '⭐ ';
-        }
+        /* 暂停/结束菜单 */
+        #pause-menu, #gameover-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; pointer-events: auto; z-index: 1000; }
+        .pause-content, .gameover-content { text-align: center; }
+        .pause-title { font-size: 48px; color: var(--neon-blue); margin-bottom: 40px; }
+        .gameover-title { font-size: 56px; color: var(--neon-red); margin-bottom: 20px; }
+        .pause-btn { display: block; width: 200px; padding: 15px; margin: 10px auto; background: var(--glass-bg); border: 2px solid var(--neon-blue); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; }
+        .pause-btn:hover { background: rgba(0,243,255,0.2); }
+        .gameover-stats { font-size: 24px; margin: 20px 0; color: #888; }
         
-        .btn {
-            background: linear-gradient(45deg, #e94560, #f39c12);
-            border: none;
-            color: white;
-            padding: clamp(14px, 4vw, 16px) clamp(30px, 8vw, 45px);
-            font-size: clamp(16px, 4vw, 18px);
-            font-weight: bold;
-            border-radius: 40px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
-            transition: all 0.3s;
-            margin: 8px;
-            display: inline-block;
-        }
-        .btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.5);
-        }
-        .btn:active {
-            transform: translateY(-1px) scale(1.02);
-        }
-        .btn.secondary {
-            background: linear-gradient(45deg, #3498db, #2c3e50);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        }
-        .btn.config {
-            background: linear-gradient(45deg, #27ae60, #2ecc71);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-        }
-        .btn.skin {
-            background: linear-gradient(45deg, #9b59b6, #8e44ad);
-            box-shadow: 0 6px 20px rgba(155, 89, 182, 0.4);
-        }
-        
-        /* 配置面板 */
-        .config-section {
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            text-align: left;
-        }
-        .config-section h3 {
-            color: #00d2ff;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .config-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-            padding: 5px 0;
-        }
-        .config-label {
-            color: #ecf0f1;
-            font-size: 13px;
-        }
-        .config-input {
-            width: 80px;
-            padding: 5px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 5px;
-            background: rgba(0,0,0,0.5);
-            color: #fff;
-            text-align: center;
-        }
-        .config-slider {
-            width: 120px;
-            margin-left: 10px;
-        }
-        
-        /* 皮肤选择界面 */
-        .skin-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-            max-width: 400px;
-        }
-        .skin-item {
-            background: rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .skin-item:hover {
-            transform: scale(1.1);
-            border-color: #f39c12;
-        }
-        .skin-item.selected {
-            border-color: #f39c12;
-            box-shadow: 0 0 20px rgba(243, 156, 18, 0.5);
-        }
-        .skin-item canvas {
-            background: rgba(0,0,0,0.5);
-            border-radius: 5px;
-            width: 100%;
-        }
-        .skin-item p {
-            color: #ecf0f1;
-            font-size: 11px;
-            margin: 5px 0 0 0;
-        }
-        
-        .hidden { display: none !important; }
+        /* 自动攻击提示 */
+        .auto-aim-indicator { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--neon-green); text-align: center; }
     </style>
-
-        <!-- 🆕 v10.0.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 04:48:14 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.0.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 04:53:45 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.0.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 04:55:46 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.0.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:02:15 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.0.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:05:43 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.0.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:10:55 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:17:53 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:33:28 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:35:52 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:46:57 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:51:06 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 05:55:37 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.7.1 自动进化 -->
-        <!-- 进化时间：2026/3/10 06:08:05 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.9.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 06:18:48 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    
-        <!-- 🆕 v10.9.0 自动进化 -->
-        <!-- 进化时间：2026/3/10 06:34:18 -->
-        <!-- 进化脚本：auto-evolve.js v3.0 -->
-    </head>
+</head>
 <body>
-    <div class="bg-stars" id="bgStars"></div>
-    
-    <div id="ui" class="hidden">
-        <div>得分：<span id="scoreVal">0</span></div>
-        <div>等级：<span id="levelVal">1</span></div>
-        <div>生命：<span id="livesVal">3</span></div>
-    </div>
-    
-    <div id="startScreen">
-        <div class="main-panel">
-            <h1>⚡ 雷霆战机 ⚡</h1>
-            <div id="version">🌟 v10.7.1 - 最终版 🌟</div>
+    <div id="game-container">
+        <!-- 加载界面 -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-content">
+                <h1 class="game-title">末日防线：代号曙光</h1>
+                <div class="loading-bar"><div class="loading-progress" id="loading-progress"></div></div>
+                <p class="loading-text" id="loading-text">初始化中...</p>
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <div id="main-menu" class="screen">
+            <div class="menu-content">
+                <h1 class="game-title-glow">末日防线：代号曙光</h1>
+                <p class="subtitle">PROJECT: DAWN</p>
+                <div class="player-info">
+                    <div class="info-row"><span class="label">指挥官等级:</span><span class="value" id="player-level">1</span></div>
+                    <div class="info-row"><span class="label">信用点:</span><span class="value currency" id="player-gold">1000</span></div>
+                    <div class="info-row"><span class="label">晶体:</span><span class="value currency" id="player-diamond">100</span></div>
+                </div>
+                <div class="menu-buttons">
+                    <button class="btn btn-primary" id="btn-start">开始战斗</button>
+                    <button class="btn btn-secondary" id="btn-upgrade">强化系统</button>
+                    <button class="btn btn-secondary" id="btn-shop">补给站</button>
+                    <button class="btn btn-secondary" id="btn-settings">系统设置</button>
+                </div>
+                <div class="version">v3.2.0</div>
+            </div>
+        </div>
+
+        <!-- 强化系统 -->
+        <div id="upgrade-screen" class="screen">
+            <button class="btn-back" onclick="Scene.back()">←</button>
+            <div class="scene-content">
+                <h2 class="scene-title">强化系统</h2>
+                <div class="feature-card"><h3>🔧 技能升级</h3><p>消耗技能点数提升技能等级<br>当前可用点数：<span style="color:var(--neon-orange)">10</span></p></div>
+                <div class="feature-card"><h3>💎 核心镶嵌</h3><p>为技能安装核心，改变技能机制<br>已解锁核心：0/5</p></div>
+                <div class="feature-card"><h3>⚡ 属性强化</h3><p>永久提升基础属性<br>当前加成：+0%</p></div>
+            </div>
+        </div>
+
+        <!-- 商店 -->
+        <div id="shop-screen" class="screen">
+            <button class="btn-back" onclick="Scene.back()">←</button>
+            <div class="scene-content">
+                <h2 class="scene-title">补给站</h2>
+                <div class="feature-card"><h3>🛒 每日礼包</h3><p>每日限购一次<br>价格：50 晶体</p></div>
+                <div class="feature-card"><h3>🎁 成长基金</h3><p>达到指定等级领取奖励<br>已领取：0/10</p></div>
+                <div class="feature-card"><h3>💰 充值中心</h3><p>首充双倍，限时优惠<br>当前晶体：<span style="color:var(--neon-orange)">100</span></p></div>
+            </div>
+        </div>
+
+        <!-- 设置 -->
+        <div id="settings-screen" class="screen">
+            <button class="btn-back" onclick="Scene.back()">←</button>
+            <div class="scene-content">
+                <h2 class="scene-title">系统设置</h2>
+                <div class="feature-card"><h3>🔊 音效设置</h3><p>背景音乐：<input type="range" min="0" max="100" value="70"></p><p>音效音量：<input type="range" min="0" max="100" value="100"></p></div>
+                <div class="feature-card"><h3>📱 画面设置</h3><p>画质：<select><option>高清</option><option>标准</option></select></p><p>帧率：<select><option>60 FPS</option><option>30 FPS</option></select></p></div>
+                <div class="feature-card"><h3>💾 数据管理</h3><button class="btn btn-secondary" style="margin:5px" onclick="alert('进度已保存')">保存进度</button></div>
+            </div>
+        </div>
+
+        <!-- 游戏画布 -->
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- 战斗 UI -->
+        <div id="battle-ui">
+            <div class="ui-top">
+                <div><div class="hp-bar"><div class="hp-fill" id="base-hp" style="width:100%"></div></div><div style="font-size:12px;color:#888;margin-top:5px">基地血量</div></div>
+                <div class="wave-info"><div class="wave-num" id="wave-num">1</div><div class="wave-label">WAVE</div></div>
+                <div class="score-info"><div class="score-num" id="score">0</div><div style="font-size:12px;color:#888">KILLS</div></div>
+            </div>
+            <button class="btn-pause" id="btn-pause">⏸</button>
             
-            <p>
-                🎮 触摸/鼠标控制飞机<br>
-                🔫 自动发射子弹<br>
-                ⭐ 击破敌机升级<br>
-                🎨 支持美术替换<br>
-                ⚙️ 支持数值配置
-            </p>
-            
-            <div class="features">
-                <h3>✨ v9.0.0 特性</h3>
-                <ul>
-                    <li>🎨 完整美术资源系统</li>
-                    <li>⚙️ 实时数值配置</li>
-                    <li>🔄 美术资源一键替换</li>
-                    <li>💾 配置永久保存</li>
-                </ul>
+            <!-- 经验条 -->
+            <div class="exp-bar-container">
+                <div class="exp-bar"><div class="exp-fill" id="exp-fill" style="width:0%"></div></div>
+                <div class="exp-text" id="exp-text">LV.1 0/100</div>
             </div>
             
-            <button class="btn" id="startBtn">🚀 开始游戏</button>
-            <br>
-            <button class="btn config" id="configBtn">⚙️ 数值配置</button>
-            <button class="btn skin" id="skinBtn">🎨 皮肤选择</button>
-            <br>
-            <button class="btn secondary" id="helpBtn">❓ 帮助</button>
+            <!-- 自动攻击提示 -->
+            <div class="auto-aim-indicator">🎯 自动锁定 + 自动射击</div>
         </div>
-    </div>
-    
-    <div id="configScreen" class="hidden">
-        <div class="main-panel" style="max-width: 600px;">
-            <h1>⚙️ 数值配置</h1>
-            <p style="color: #95a5a6; font-size: 13px;">调整游戏数值，配置自动保存</p>
-            
-            <div class="config-section">
-                <h3>👤 玩家设置</h3>
-                <div class="config-row">
-                    <span class="config-label">初始生命</span>
-                    <input type="number" id="cfg_playerHealth" class="config-input" value="3" min="1" max="10">
-                </div>
-                <div class="config-row">
-                    <span class="config-label">基础伤害</span>
-                    <input type="number" id="cfg_playerDamage" class="config-input" value="2" min="1" max="10">
-                </div>
-                <div class="config-row">
-                    <span class="config-label">移动速度</span>
-                    <input type="range" id="cfg_playerSpeed" class="config-slider" min="5" max="15" value="8">
-                    <span id="cfg_playerSpeed_val" style="color: #f39c12; width: 30px;">8</span>
-                </div>
-                <div class="config-row">
-                    <span class="config-label">射击间隔</span>
-                    <input type="range" id="cfg_fireRate" class="config-slider" min="5" max="30" value="15">
-                    <span id="cfg_fireRate_val" style="color: #f39c12; width: 30px;">15</span>
-                </div>
+
+        <!-- 开局选择弹窗 -->
+        <div id="start-select-modal">
+            <div class="levelup-content">
+                <div class="levelup-title">选择初始道具</div>
+                <div class="levelup-subtitle">选择一个开始战斗</div>
+                <div class="skill-cards" id="start-skill-cards"></div>
             </div>
-            
-            <div class="config-section">
-                <h3>👾 敌机设置</h3>
-                <div class="config-row">
-                    <span class="config-label">生成速度</span>
-                    <input type="range" id="cfg_enemySpawn" class="config-slider" min="20" max="100" value="50">
-                    <span id="cfg_enemySpawn_val" style="color: #f39c12; width: 30px;">50</span>
-                </div>
-                <div class="config-row">
-                    <span class="config-label">敌机血量倍率</span>
-                    <input type="number" id="cfg_enemyHealth" class="config-input" value="1" min="0.5" max="5" step="0.1">
-                </div>
+        </div>
+
+        <!-- 升级弹窗 -->
+        <div id="levelup-modal">
+            <div class="levelup-content">
+                <div class="levelup-title">LEVEL UP!</div>
+                <div class="levelup-subtitle" id="levelup-level">当前等级：2</div>
+                <div class="skill-cards" id="skill-cards"></div>
             </div>
-            
-            <div class="config-section">
-                <h3>🎮 游戏设置</h3>
-                <div class="config-row">
-                    <span class="config-label">重力</span>
-                    <input type="number" id="cfg_gravity" class="config-input" value="0.8" min="0" max="2" step="0.1">
-                </div>
+        </div>
+
+        <!-- 暂停菜单 -->
+        <div id="pause-menu">
+            <div class="pause-content">
+                <div class="pause-title">已暂停</div>
+                <button class="pause-btn" onclick="Battle.resume()">继续战斗</button>
+                <button class="pause-btn" onclick="Battle.restart()">重新开始</button>
+                <button class="pause-btn" onclick="Battle.quit()">返回主菜单</button>
             </div>
-            
-            <button class="btn" id="saveConfigBtn">💾 保存配置</button>
-            <button class="btn secondary" id="resetConfigBtn">🔄 重置默认</button>
-            <button class="btn" id="closeConfigBtn" style="background: linear-gradient(45deg, #95a5a6, #7f8c8d);">❌ 关闭</button>
+        </div>
+
+        <!-- 游戏结束 -->
+        <div id="gameover-menu">
+            <div class="gameover-content">
+                <div class="gameover-title">GAME OVER</div>
+                <div class="gameover-stats"><div>波次：<span id="final-wave" style="color:var(--neon-blue)">0</span></div><div>击杀：<span id="final-score" style="color:var(--neon-orange)">0</span></div><div>最高等级：<span id="final-level" style="color:var(--neon-purple)">0</span></div></div>
+                <button class="pause-btn" onclick="Battle.restart()">再次挑战</button>
+                <button class="pause-btn" onclick="Battle.quit()">返回主菜单</button>
+            </div>
         </div>
     </div>
-    
-    <div id="skinScreen" class="hidden">
-        <div class="main-panel" style="max-width: 600px;">
-            <h1>🎨 皮肤选择</h1>
-            <p style="color: #95a5a6; font-size: 13px;">选择你喜欢的外观</p>
-            
-            <div class="skin-grid" id="skinGrid"></div>
-            
-            <button class="btn" id="saveSkinBtn">💾 保存选择</button>
-            <button class="btn" id="closeSkinBtn" style="background: linear-gradient(45deg, #95a5a6, #7f8c8d);">❌ 关闭</button>
-        </div>
-    </div>
-    
-    <div id="gameOverScreen" class="hidden">
-        <div class="main-panel">
-            <h1>💥 游戏结束 💥</h1>
-            <p style="color: #ecf0f1; font-size: 15px; margin: 10px 0;">最终得分</p>
-            <div id="finalScore">0</div>
-            <p style="color: #f39c12; font-size: 14px; margin: 10px 0;">💰 获得金币：<span id="earnedGold">0</span></p>
-            <button class="btn" id="restartBtn">🔄 再来一次</button>
-            <br>
-            <button class="btn secondary" id="menuBtn">🏠 返回菜单</button>
-        </div>
-    </div>
-    
-    <canvas id="gameCanvas"></canvas>
-    
+
+    <script src="scripts/rogue-system-v2.js"></script>
     <script>
-        // 创建背景星星
-        const bgStars = document.getElementById('bgStars');
-        for (let i = 0; i < 60; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            const size = 1.5 + Math.random() * 3;
-            star.style.width = size + 'px';
-            star.style.height = size + 'px';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 2 + 's';
-            bgStars.appendChild(star);
-        }
-        
-        // 游戏主逻辑
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        function resizeCanvas() {
-            canvas.width = Math.min(window.innerWidth * 0.95, 480);
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        
-        
-        // 🆕 v10.0.0 在线排行榜系统 (Firebase 框架)
-        const leaderboardData = [
-            { rank: 1, name: '王牌飞行员', score: 999999, date: '2026-03-10' },
-            { rank: 2, name: '雷霆战神', score: 888888, date: '2026-03-09' },
-            { rank: 3, name: '星空猎手', score: 777777, date: '2026-03-09' },
-            { rank: 4, name: '银河守护者', score: 666666, date: '2026-03-08' },
-            { rank: 5, name: '宇宙先锋', score: 555555, date: '2026-03-08' }
-        ];
-        
-        // 模拟 Firebase 上传分数
-        function uploadScoreToLeaderboard(score, playerName) {
-            console.log('📤 上传分数到在线排行榜:', score, playerName);
-            // 实际实现需要 Firebase SDK
-            // firebase.database().ref('leaderboard').push({ score, name: playerName, date: new Date() });
-            leaderboardData.push({ rank: leaderboardData.length + 1, name: playerName, score: score, date: new Date().toISOString().split('T')[0] });
-            leaderboardData.sort((a, b) => b.score - a.score);
-            leaderboardData.forEach((item, i) => item.rank = i + 1);
-            return true;
-        }
-        
-        // 获取排行榜
-        function getLeaderboard(limit = 10) {
-            return leaderboardData.slice(0, limit);
-        }
-
-        // 🆕 v10.0.0 社交分享系统
-        function shareScore(score, kills, combo) {
-            const text = '⚡ 雷霆战机 v10.9.0\n' +
-                '🎮 我的得分：' + score + '\n' +
-                '💥 击毁敌机：' + kills + ' 架\n' +
-                '🔥 最高连击：' + combo + 'x\n' +
-                '快来挑战我吧！';
-            
-            // 微信分享
-            const wechatUrl = 'https://www.weixin.qq.com/';
-            // 微博分享
-            const weiboUrl = 'https://service.weibo.com/share/share.php?title=' + encodeURIComponent(text);
-            // QQ 分享
-            const qqUrl = 'http://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?summary=' + encodeURIComponent(text);
-            
-            console.log('📤 分享功能已触发');
-            console.log('微博分享链接:', weiboUrl);
-            console.log('QQ 分享链接:', qqUrl);
-            
-            return { wechatUrl, weiboUrl, qqUrl, text };
-        }
-
-        // 🆕 v10.0.0 赛季系统
-        const currentSeason = {
-            id: 1,
-            name: 'S1 赛季：雷霆崛起',
-            startDate: '2026-03-01',
-            endDate: '2026-03-31',
-            rewards: [
-                { level: 10, item: '限定皮肤：雷霆战甲', type: 'skin' },
-                { level: 20, item: '限定头像框：王者', type: 'frame' },
-                { level: 30, item: '稀有道具：金色导弹', type: 'powerup' },
-                { level: 50, item: '限定称号：赛季王者', type: 'title' }
-            ]
+        var Scene = {
+            currentScene: 'loading', history: [],
+            switchTo: function(id) {
+                var screens = document.querySelectorAll('.screen');
+                for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+                if (this.currentScene !== id) this.history.push(this.currentScene);
+                var target = document.getElementById(id);
+                if (target) { target.classList.add('active'); this.currentScene = id; }
+            },
+            back: function() { if (this.history.length > 0) this.switchTo(this.history.pop()); }
         };
-        
-        let seasonProgress = {
-            level: 1,
-            exp: 0,
-            expToNext: 1000
-        };
-        
-        function addSeasonExp(exp) {
-            seasonProgress.exp += exp;
-            if (seasonProgress.exp >= seasonProgress.expToNext) {
-                seasonProgress.level++;
-                seasonProgress.exp = 0;
-                seasonProgress.expToNext = Math.floor(seasonProgress.expToNext * 1.2);
-                checkSeasonReward();
-            }
-        }
-        
-        function checkSeasonReward() {
-            const reward = currentSeason.rewards.find(r => r.level === seasonProgress.level);
-            if (reward) {
-                console.log('🎁 获得赛季奖励:', reward.item);
-                return reward;
-            }
-            return null;
-        }
-// 游戏配置 - 支持本地存储和外部配置
-        let gameConfig = {
-            playerHealth: 3,
-            playerDamage: 2,
-            playerSpeed: 8,
-            fireRate: 15,
-            enemySpawn: 50,
-            enemyHealth: 1,
-            gravity: 0.8
-        };
-        
-        // 加载配置
-        function loadConfig() {
-            const saved = localStorage.getItem('thunder_config');
-            if (saved) {
-                gameConfig = { ...gameConfig, ...JSON.parse(saved) };
-            }
-            
-            // 更新 UI
-            document.getElementById('cfg_playerHealth').value = gameConfig.playerHealth;
-            document.getElementById('cfg_playerDamage').value = gameConfig.playerDamage;
-            document.getElementById('cfg_playerSpeed').value = gameConfig.playerSpeed;
-            document.getElementById('cfg_playerSpeed_val').textContent = gameConfig.playerSpeed;
-            document.getElementById('cfg_fireRate').value = gameConfig.fireRate;
-            document.getElementById('cfg_fireRate_val').textContent = gameConfig.fireRate;
-            document.getElementById('cfg_enemySpawn').value = gameConfig.enemySpawn;
-            document.getElementById('cfg_enemySpawn_val').textContent = gameConfig.enemySpawn;
-            document.getElementById('cfg_enemyHealth').value = gameConfig.enemyHealth;
-            document.getElementById('cfg_gravity').value = gameConfig.gravity;
-        }
-        
-        // 保存配置
-        function saveConfig() {
-            gameConfig.playerHealth = parseInt(document.getElementById('cfg_playerHealth').value);
-            gameConfig.playerDamage = parseInt(document.getElementById('cfg_playerDamage').value);
-            gameConfig.playerSpeed = parseInt(document.getElementById('cfg_playerSpeed').value);
-            gameConfig.fireRate = parseInt(document.getElementById('cfg_fireRate').value);
-            gameConfig.enemySpawn = parseInt(document.getElementById('cfg_enemySpawn').value);
-            gameConfig.enemyHealth = parseFloat(document.getElementById('cfg_enemyHealth').value);
-            gameConfig.gravity = parseFloat(document.getElementById('cfg_gravity').value);
-            
-            localStorage.setItem('thunder_config', JSON.stringify(gameConfig));
-            
-            // 通知美术替换系统
-            window.postMessage({ type: 'UPDATE_CONFIG', config: gameConfig }, '*');
-            
-            alert('✅ 配置已保存！');
-        }
-        
-        // 重置配置
-        function resetConfig() {
-            gameConfig = {
-                playerHealth: 3,
-                playerDamage: 2,
-                playerSpeed: 8,
-                fireRate: 15,
-                enemySpawn: 50,
-                enemyHealth: 1,
-                gravity: 0.8
-            };
-            localStorage.setItem('thunder_config', JSON.stringify(gameConfig));
-            loadConfig();
-            alert('✅ 配置已重置！');
-        }
-        
-        // 皮肤系统
-        let selectedSkin = 'classic';
-        const skins = [
-            { id: 'classic', name: '经典', color: '#4ecdc4' },
-            { id: 'elite', name: '精英', color: '#f39c12' },
-            { id: 'dark', name: '暗黑', color: '#8e44ad' },
-            { id: 'fire', name: '火焰', color: '#e74c3c' }
-        ];
-        
-        function loadSkin() {
-            const saved = localStorage.getItem('thunder_skin');
-            if (saved) selectedSkin = saved;
-            renderSkins();
-        }
-        
-        function renderSkins() {
-            const grid = document.getElementById('skinGrid');
-            grid.innerHTML = '';
-            skins.forEach(skin => {
-                const item = document.createElement('div');
-                item.className = 'skin-item' + (skin.id === selectedSkin ? ' selected' : '');
-                item.onclick = () => { selectedSkin = skin.id; renderSkins(); };
-                
-                const cvs = document.createElement('canvas');
-                cvs.width = 80;
-                cvs.height = 80;
-                const c = cvs.getContext('2d');
-                
-                // 绘制飞机预览
-                c.fillStyle = skin.color;
-                c.beginPath();
-                c.moveTo(40, 10);
-                c.lineTo(10, 70);
-                c.lineTo(40, 50);
-                c.lineTo(70, 70);
-                c.closePath();
-                c.fill();
-                
-                const p = document.createElement('p');
-                p.textContent = skin.name;
-                
-                item.appendChild(cvs);
-                item.appendChild(p);
-                grid.appendChild(item);
-            });
-        }
-        
-        function saveSkin() {
-            localStorage.setItem('thunder_skin', selectedSkin);
-            alert('✅ 皮肤已保存！');
-        }
-        
-        // 获取当前皮肤颜色
-        function getSkinColor() {
-            const skin = skins.find(s => s.id === selectedSkin);
-            return skin ? skin.color : '#4ecdc4';
-        }
-        
-        // 监听配置更新
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'UPDATE_CONFIG') {
-                const cfg = event.data.config;
-                if (cfg) {
-                    gameConfig = { ...gameConfig, ...cfg };
-                    localStorage.setItem('thunder_config', JSON.stringify(gameConfig));
-                    loadConfig();
-                }
-            }
-        });
-        
-        let gameRunning = false;
-        let powerUps = [];
-        let score = 0, lives = 3, level = 1, gold = 0, exp = 0, expToLevel = 100;
-        
-        let playerUpgrades = { bulletSpeed: 1, bulletDamage: 1, fireRate: 1, bulletCount: 1, bulletSpread: 0, speed: 1 };
-        
-        const player = {
-            x: 0,
-            y: 0,
-            width: 50,
-            height: 60,
-            baseSpeed: 8,
-            color: '#4ecdc4'
-        };
-        
-        let bullets = [], enemies = [], enemyBullets = [], particles = [], gameStars = [];
 
-        // ==================== 道具系统 v9.0.0 ====================
-        const powerUpTypes = {
-            POWER: { name: '火力增强', color: '#ff6b6b', duration: 10000, effect: 'damage' },
-            SHIELD: { name: '护盾', color: '#4ecdc4', duration: 8000, effect: 'shield' },
-            HEALTH: { name: '生命恢复', color: '#2ecc71', duration: 0, effect: 'health' },
-            SLOW: { name: '时空减速', color: '#a29bfe', duration: 15000, effect: 'slow' },
-            DOUBLE: { name: '金币加倍', color: '#f39c12', duration: 20000, effect: 'double' }
+        var GameData = {
+            data: null,
+            init: function() {
+                try { var saved = localStorage.getItem('dawn_save'); this.data = saved ? JSON.parse(atob(saved)).data : this.createDefault(); }
+                catch(e) { this.data = this.createDefault(); }
+                return this.data;
+            },
+            createDefault: function() { return { level: 1, exp: 0, resources: { gold: 1000, diamond: 100, skillToken: 10 } }; },
+            updateUI: function() {
+                document.getElementById('player-level').textContent = this.data.level;
+                document.getElementById('player-gold').textContent = this.data.resources.gold.toLocaleString();
+                document.getElementById('player-diamond').textContent = this.data.resources.diamond.toLocaleString();
+            }
         };
-        
-        let activePowerUps = {};
-        let powerUpEffectTimer = null;
-        
-        function spawnPowerUp(x, y) {
-            if (Math.random() > 0.3) return; // 30% 掉落率
-            const types = Object.keys(powerUpTypes);
-            const type = types[Math.floor(Math.random() * types.length)];
-            powerUps.push({
-                x, y, type,
-                width: 25, height: 25,
-                speed: 2,
-                pulse: 0
-            });
-        }
-        
-        function applyPowerUp(type) {
-            const config = powerUpTypes[type];
-            console.log('🎁 获得道具:', config.name);
-            
-            if (config.effect === 'health') {
-                player.health = Math.min(player.health + 1, player.maxHealth);
-            } else if (config.effect === 'damage') {
-                player.damage = player.baseDamage * 2;
-                activePowerUps.POWER = Date.now() + config.duration;
-            } else if (config.effect === 'shield') {
-                player.shield = true;
-                activePowerUps.SHIELD = Date.now() + config.duration;
-            } else if (config.effect === 'slow') {
-                activePowerUps.SLOW = Date.now() + config.duration;
-                enemySpeedMultiplier = 0.5;
-            } else if (config.effect === 'double') {
-                activePowerUps.DOUBLE = Date.now() + config.duration;
+
+        var Battle = null;
+
+        var Game = {
+            init: function() {
+                var self = this;
+                document.getElementById('loading-progress').style.width = '20%';
+                document.getElementById('loading-text').textContent = '加载玩家数据...';
+                GameData.init();
+                setTimeout(function() { document.getElementById('loading-progress').style.width = '50%'; document.getElementById('loading-text').textContent = '初始化战斗系统...'; RogueSystem.init(); Battle = RogueSystem; }, 300);
+                setTimeout(function() { document.getElementById('loading-progress').style.width = '80%'; document.getElementById('loading-text').textContent = '加载完成'; }, 600);
+                setTimeout(function() {
+                    document.getElementById('loading-progress').style.width = '100%';
+                    document.getElementById('loading-text').textContent = '启动游戏...';
+                    setTimeout(function() { Scene.switchTo('main-menu'); GameData.updateUI(); self.bindEvents(); Battle.gameLoop(); }, 300);
+                }, 900);
+            },
+            bindEvents: function() {
+                document.getElementById('btn-start').onclick = function() { Battle.showStartSelect(); };
+                document.getElementById('btn-upgrade').onclick = function() { Scene.switchTo('upgrade-screen'); };
+                document.getElementById('btn-shop').onclick = function() { Scene.switchTo('shop-screen'); };
+                document.getElementById('btn-settings').onclick = function() { Scene.switchTo('settings-screen'); };
+                document.getElementById('btn-pause').onclick = function() { Battle.pause(); };
             }
-        }
-        
-        function updatePowerUps() {
-            const now = Date.now();
-            if (activePowerUps.POWER && now > activePowerUps.POWER) {
-                player.damage = player.baseDamage;
-                delete activePowerUps.POWER;
-            }
-            if (activePowerUps.SHIELD && now > activePowerUps.SHIELD) {
-                player.shield = false;
-                delete activePowerUps.SHIELD;
-            }
-            if (activePowerUps.SLOW && now > activePowerUps.SLOW) {
-                enemySpeedMultiplier = 1.0;
-                delete activePowerUps.SLOW;
-            }
-            if (activePowerUps.DOUBLE && now > activePowerUps.DOUBLE) {
-                delete activePowerUps.DOUBLE;
-            }
-        }
-        
-        let enemySpeedMultiplier = 1.0;
-        
-        // ==================== 连击系统 v9.0.0 ====================
-        let combo = 0;
-        let comboTimer = 0;
-        let maxCombo = 0;
-        let comboDisplay = '';
-        
-        function addCombo() {
-            combo++;
-            comboTimer = Date.now() + 3000; // 3 秒内继续连击
-            if (combo > maxCombo) maxCombo = combo;
-            
-            if (combo >= 50) comboDisplay = '🔥 连击之神!';
-            else if (combo >= 30) comboDisplay = '💀 连击大师!';
-            else if (combo >= 20) comboDisplay = '⚡ 连击高手!';
-            else if (combo >= 10) comboDisplay = '✨ 连击启动!';
-            else comboDisplay = '';
-        }
-        
-        function updateCombo() {
-            if (comboTimer > 0 && Date.now() > comboTimer && combo > 0) {
-                combo = 0;
-                comboDisplay = '';
-            }
-        }
-        
-        function getComboMultiplier() {
-            return Math.min(1 + combo * 0.1, 10); // 最高 10x
-        }
-        
-        // ==================== 成就系统 v9.0.0 ====================
-        const achievements = [
-            { id: 'first_blood', name: '首杀', desc: '击毁第一架敌机', unlocked: false, condition: (stats) => stats.kills >= 1 },
-            { id: 'combo_10', name: '连击高手', desc: '达成 10 连击', unlocked: false, condition: (stats) => stats.maxCombo >= 10 },
-            { id: 'combo_30', name: '连击大师', desc: '达成 30 连击', unlocked: false, condition: (stats) => stats.maxCombo >= 30 },
-            { id: 'combo_50', name: '连击之神', desc: '达成 50 连击', unlocked: false, condition: (stats) => stats.maxCombo >= 50 },
-            { id: 'survivor_5min', name: '幸存者', desc: '存活 5 分钟', unlocked: false, condition: (stats) => stats.survivalTime >= 300 },
-            { id: 'killer_100', name: '杀手', desc: '击毁 100 架敌机', unlocked: false, condition: (stats) => stats.kills >= 100 },
-            { id: 'killer_500', name: '屠戮者', desc: '击毁 500 架敌机', unlocked: false, condition: (stats) => stats.kills >= 500 },
-            { id: 'score_10000', name: '高分王', desc: '单局得分 10000', unlocked: false, condition: (stats) => stats.highScore >= 10000 },
-            { id: 'score_50000', name: '传奇', desc: '单局得分 50000', unlocked: false, condition: (stats) => stats.highScore >= 50000 },
-            { id: 'gold_1000', name: '富翁', desc: '累计获得 1000 金币', unlocked: false, condition: (stats) => stats.totalGold >= 1000 }
-        ];
-        
-        let gameStats = {
-            kills: 0,
-            maxCombo: 0,
-            survivalTime: 0,
-            highScore: 0,
-            totalGold: 0
         };
-        
-        function checkAchievements() {
-            achievements.forEach(ach => {
-                if (!ach.unlocked && ach.condition(gameStats)) {
-                    ach.unlocked = true;
-                    console.log('🏆 解锁成就:', ach.name, '-', ach.desc);
-                    saveAchievements();
-                }
-            });
-        }
-        
-        function saveAchievements() {
-            try {
-                const unlocked = achievements.filter(a => a.unlocked).map(a => a.id);
-                localStorage.setItem('thunder_achievements', JSON.stringify(unlocked));
-            } catch(e) {}
-        }
-        
-        function loadAchievements() {
-            try {
-                const unlocked = JSON.parse(localStorage.getItem('thunder_achievements') || '[]');
-                achievements.forEach(a => {
-                    if (unlocked.includes(a.id)) a.unlocked = true;
-                });
-            } catch(e) {}
-        }
 
-
-        
-        const upgradePool = [
-            { id: 'bulletSpeed', name: '🚀 子弹加速', desc: '子弹速度 +20%', apply: () => { playerUpgrades.bulletSpeed += 0.2; } },
-            { id: 'bulletDamage', name: '💥 强力子弹', desc: '子弹伤害 +50%', apply: () => { playerUpgrades.bulletDamage += 0.5; } },
-            { id: 'fireRate', name: '⚡ 快速射击', desc: '射速 +20%', apply: () => { playerUpgrades.fireRate += 0.2; } },
-            { id: 'bulletCount', name: '🔱 多重射击', desc: '子弹数量 +1', apply: () => { playerUpgrades.bulletCount = Math.min(5, playerUpgrades.bulletCount + 1); } },
-            { id: 'heal', name: '❤️ 修复', desc: '恢复 1 点生命', apply: () => { lives = Math.min(5, lives + 1); } },
-            { id: 'speed', name: '💨 飞机加速', desc: '移动速度 +20%', apply: () => { playerUpgrades.speed += 0.2; } }
-        ];
-        
-        function initGameStars() {
-            gameStars = [];
-            for (let i = 0; i < 60; i++) {
-                gameStars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: 0.8 + Math.random() * 1.5,
-                    speed: 1.5 + Math.random() * 2.5
-                });
-            }
-        }
-        
-        function drawGameStars() {
-            gameStars.forEach(star => {
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.random() * 0.5})`;
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-                ctx.fill();
-                star.y += star.speed;
-                if (star.y > canvas.height) {
-                    star.y = 0;
-                    star.x = Math.random() * canvas.width;
-                }
-            });
-        }
-        
-        function resetPlayer() {
-            player.x = canvas.width / 2;
-            player.y = canvas.height - 150;
-        }
-        
-        function drawPlayer() {
-            ctx.save();
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = getSkinColor();
-            
-            ctx.fillStyle = getSkinColor();
-            ctx.beginPath();
-            ctx.moveTo(player.x, player.y - player.height / 2);
-            ctx.lineTo(player.x - player.width / 2, player.y + player.height / 2);
-            ctx.lineTo(player.x, player.y + player.height / 3);
-            ctx.lineTo(player.x + player.width / 2, player.y + player.height / 2);
-            ctx.closePath();
-            ctx.fill();
-            
-            if (level >= 11) {
-                ctx.fillStyle = '#27ae60';
-                ctx.beginPath();
-                ctx.moveTo(player.x - player.width / 2 - 10, player.y + player.height / 4);
-                ctx.lineTo(player.x - player.width / 2, player.y + player.height / 2);
-                ctx.lineTo(player.x - player.width / 2 + 20, player.y + player.height / 4);
-                ctx.closePath();
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(player.x + player.width / 2 + 10, player.y + player.height / 4);
-                ctx.lineTo(player.x + player.width / 2, player.y + player.height / 2);
-                ctx.lineTo(player.x + player.width / 2 - 20, player.y + player.height / 4);
-                ctx.closePath();
-                ctx.fill();
-            }
-            
-            ctx.fillStyle = `rgba(255, ${Math.floor(Math.random() * 100) + 100}, 0, 0.8)`;
-            ctx.beginPath();
-            ctx.moveTo(player.x - 10, player.y + player.height / 2);
-            ctx.lineTo(player.x, player.y + player.height / 2 + 20 + Math.random() * 10);
-            ctx.lineTo(player.x + 10, player.y + player.height / 2);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.restore();
-        }
-        
-        function createBullet() {
-            const count = playerUpgrades.bulletCount;
-            const spread = playerUpgrades.bulletSpread;
-            
-            for (let i = 0; i < count; i++) {
-                const angle = (i - (count - 1) / 2) * spread;
-                bullets.push({
-                    x: player.x,
-                    y: player.y - player.height / 2,
-                    vx: Math.sin(angle) * 3,
-                    vy: -12 * playerUpgrades.bulletSpeed - Math.cos(angle) * 3,
-                    width: 6,
-                    height: 20,
-                    damage: gameConfig.playerDamage * playerUpgrades.bulletDamage,
-                    color: '#f39c12',
-                    trail: true
-                });
-            }
-        }
-        
-        function drawBullets() {
-            bullets.forEach((bullet, index) => {
-                if (bullet.trail) {
-                    const gradient = ctx.createLinearGradient(bullet.x, bullet.y, bullet.x, bullet.y + 35);
-                    gradient.addColorStop(0, 'rgba(243, 156, 18, 0)');
-                    gradient.addColorStop(1, 'rgba(243, 156, 18, 0.9)');
-                    ctx.fillStyle = gradient;
-                    ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width, 35);
-                }
-                
-                ctx.fillStyle = bullet.color;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = bullet.color;
-                ctx.fillRect(bullet.x - bullet.width / 2, bullet.y - bullet.height / 2, bullet.width, bullet.height);
-                ctx.shadowBlur = 0;
-                
-                bullet.x += bullet.vx;
-                bullet.y += bullet.vy;
-                
-                if (bullet.y < 0 || bullet.x < 0 || bullet.x > canvas.width) {
-                    bullets.splice(index, 1);
-                }
-            });
-        }
-        
-        function createEnemy() {
-            const types = ['small', 'medium', 'large', 'elite', 'boss'];
-            const rand = Math.random();
-            let type;
-            
-            if (rand < 0.4) type = 'small';
-            else if (rand < 0.7) type = 'medium';
-            else if (rand < 0.85) type = 'large';
-            else if (rand < 0.95) type = 'elite';
-            else type = 'boss';
-            
-            let enemy = {
-                x: Math.random() * (canvas.width - 40) + 20,
-                y: -50,
-                type: type,
-                speed: 2 + Math.random() * 2 + level * 0.2
-            };
-            
-            const typeStats = {
-                small: { width: 30, height: 30, health: 10, color: '#e94560', score: 10, gold: 1 },
-                medium: { width: 45, height: 45, health: 25, color: '#f39c12', score: 30, gold: 3 },
-                large: { width: 60, height: 60, health: 50, color: '#e94560', score: 50, gold: 5 },
-                elite: { width: 70, height: 70, health: 100, color: '#3498db', score: 100, gold: 10, glow: true },
-                boss: { width: 100, height: 100, health: 500, color: '#9b59b6', score: 500, gold: 50, glow: true }
-            };
-            
-            Object.assign(enemy, typeStats[type]);
-            enemy.health *= gameConfig.enemyHealth;
-            enemy.maxHealth = enemy.health;
-            enemies.push(enemy);
-        }
-        
-        function drawEnemies() {
-            enemies.forEach((enemy, index) => {
-                if (enemy.glow) {
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = enemy.color;
-                }
-                
-                ctx.fillStyle = enemy.color;
-                ctx.beginPath();
-                ctx.moveTo(enemy.x, enemy.y + enemy.height / 2);
-                ctx.lineTo(enemy.x - enemy.width / 2, enemy.y - enemy.height / 2);
-                ctx.lineTo(enemy.x, enemy.y - enemy.height / 3);
-                ctx.lineTo(enemy.x + enemy.width / 2, enemy.y - enemy.height / 2);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-                
-                if (enemy.health < enemy.maxHealth) {
-                    const barWidth = enemy.width;
-                    const barHeight = 4;
-                    ctx.fillStyle = '#333';
-                    ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.height / 2 - 8, barWidth, barHeight);
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.height / 2 - 8, barWidth * (enemy.health / enemy.maxHealth), barHeight);
-                }
-                
-                enemy.y += enemy.speed;
-                
-                if (enemy.y > canvas.height + 50) {
-                    enemies.splice(index, 1);
-                }
-            });
-        }
-        
-        function enemyShoot() {
-            enemies.forEach(enemy => {
-                const shootRate = enemy.type === 'elite' || enemy.type === 'boss' ? 0.05 : 0.02;
-                if (Math.random() < shootRate) {
-                    enemyBullets.push({
-                        x: enemy.x,
-                        y: enemy.y + enemy.height / 2,
-                        width: 8,
-                        height: 8,
-                        speed: 5 + level * 0.3,
-                        color: '#ff6b6b'
-                    });
-                }
-            });
-        }
-        
-        function drawEnemyBullets() {
-            enemyBullets.forEach((bullet, index) => {
-                ctx.fillStyle = bullet.color;
-                ctx.beginPath();
-                ctx.arc(bullet.x, bullet.y, bullet.width / 2, 0, Math.PI * 2);
-                ctx.fill();
-                bullet.y += bullet.speed;
-                
-                if (bullet.y > canvas.height) {
-                    enemyBullets.splice(index, 1);
-                }
-            });
-        }
-        
-        function createExplosion(x, y, color, count) {
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: x,
-                    y: y,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: (Math.random() - 0.5) * 10,
-                    size: 3 + Math.random() * 4,
-                    color: color,
-                    life: 35
-                });
-            }
-        }
-        
-        function drawParticles() {
-            particles.forEach((particle, index) => {
-                ctx.fillStyle = particle.color;
-                ctx.globalAlpha = particle.life / 35;
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-                
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                particle.life--;
-                
-                if (particle.life <= 0) {
-                    particles.splice(index, 1);
-                }
-            });
-        }
-        
-        function checkCollision(obj1, obj2) {
-            const dx = obj1.x - obj2.x;
-            const dy = obj1.y - obj2.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            return distance < (obj1.width + obj2.width) / 2;
-        }
-        
-        function showLevelUpPanel() {
-            const options = [];
-            const pool = [...upgradePool];
-            for (let i = 0; i < 3 && pool.length > 0; i++) {
-                const index = Math.floor(Math.random() * pool.length);
-                options.push(pool[index]);
-                pool.splice(index, 1);
-            }
-            
-            const choice = prompt(`升级选择!\n\n1. ${options[0].name} - ${options[0].desc}\n2. ${options[1].name} - ${options[1].desc}\n3. ${options[2].name} - ${options[2].desc}\n\n输入数字选择 (1-3):`);
-            if (choice >= 1 && choice <= 3) {
-                options[choice - 1].apply();
-            }
-        }
-        
-        canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-        canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            player.x = e.touches[0].clientX - rect.left;
-            player.y = e.touches[0].clientY - rect.top;
-            player.x = Math.max(player.width / 2, Math.min(canvas.width - player.width / 2, player.x));
-            player.y = Math.max(player.height / 2, Math.min(canvas.height - player.height / 2, player.y));
-        }, { passive: false });
-        
-        canvas.addEventListener('mousemove', e => {
-            if (gameRunning) {
-                const rect = canvas.getBoundingClientRect();
-                player.x = e.clientX - rect.left;
-                player.y = e.clientY - rect.top;
-                player.x = Math.max(player.width / 2, Math.min(canvas.width - player.width / 2, player.x));
-                player.y = Math.max(player.height / 2, Math.min(canvas.height - player.height / 2, player.y));
-            }
-        });
-        
-        let shootTimer = 0;
-        let shootInterval = 15;
-        let enemyTimer = 0;
-        let enemyInterval = 50;
-        
-        function gameLoop() {
-            if (!gameRunning) return;
-            
-            ctx.fillStyle = '#0a0a2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            drawGameStars();
-            
-            shootTimer++;
-            const currentShootInterval = gameConfig.fireRate / playerUpgrades.fireRate;
-            if (shootTimer >= currentShootInterval) {
-                createBullet();
-                shootTimer = 0;
-            }
-            
-            enemyTimer++;
-            if (enemyTimer >= gameConfig.enemySpawn) {
-                createEnemy();
-                enemyTimer = 0;
-            }
-            
-            enemyShoot();
-            drawPlayer();
-            drawBullets();
-            drawEnemies();
-            drawEnemyBullets();
-            drawParticles();
-            
-            // 渲染道具
-            powerUps.forEach(p => {
-                const config = powerUpTypes[p.type];
-                p.pulse += 0.1;
-                const pulseSize = Math.sin(p.pulse) * 3;
-                
-                ctx.fillStyle = config.color;
-                ctx.beginPath();
-                ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2 + pulseSize, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 发光效果
-                ctx.shadowColor = config.color;
-                ctx.shadowBlur = 15;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                
-                // 文字标签
-                ctx.fillStyle = '#fff';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(p.type[0], p.x + p.width/2, p.y + p.height/2 + 4);
-            });
-            
-            bullets.forEach((bullet, bulletIndex) => {
-                enemies.forEach((enemy, enemyIndex) => {
-                    if (checkCollision(bullet, enemy)) {
-                        bullets.splice(bulletIndex, 1);
-                        enemy.health -= bullet.damage;
-                        
-                        if (enemy.health <= 0) {
-                            const particleCount = enemy.type === 'boss' ? 120 : enemy.type === 'elite' ? 50 : 20;
-                            createExplosion(enemy.x, enemy.y, enemy.color, particleCount);
-                            score += enemy.score;
-                            gold += enemy.gold;
-                            exp += enemy.gold * 2;
-                            enemies.splice(enemyIndex, 1);
-                            updateUI();
-                            
-                            if (exp >= expToLevel) {
-                                exp -= expToLevel;
-                                level++;
-                                expToLevel = Math.floor(expToLevel * 1.5);
-                                showLevelUpPanel();
-                            }
-                            
-                            if (score > level * 500) {
-                                level++;
-                                enemyInterval = Math.max(25, 50 - level * 2);
-                            }
-                        }
-                    }
-                });
-            });
-            
-            enemyBullets.forEach((bullet, index) => {
-                if (checkCollision(bullet, player)) {
-                    enemyBullets.splice(index, 1);
-                    lives--;
-                    updateUI();
-                    createExplosion(player.x, player.y, '#ff0000', 30);
-                    if (lives <= 0) {
-                        gameOver();
-                    }
-                }
-            });
-            
-            enemies.forEach((enemy, index) => {
-                if (checkCollision(enemy, player)) {
-                    enemies.splice(index, 1);
-                    createExplosion(enemy.x, enemy.y, enemy.color, 20);
-                    lives--;
-                    updateUI();
-                    if (lives <= 0) {
-                        gameOver();
-                    }
-                }
-            });
-            
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function updateUI() {
-            document.getElementById('scoreDisplay').textContent = `得分：${score}`;
-            document.getElementById('levelDisplay').textContent = `等级：${level}`;
-            document.getElementById('goldDisplay').textContent = `金币：${gold}`;
-        }
-        
-        function startGame() {
-            gameRunning = true;
-            if (soundEnabled) {
-                audioCtx.resume();
-                startBGM();
-            }
-            loadDailyQuests();
-
-            score = 0;
-            lives = gameConfig.playerHealth;
-            level = 1;
-            gold = 0;
-            exp = 0;
-            expToLevel = 100;
-            playerUpgrades = { bulletSpeed: 1, bulletDamage: 1, fireRate: 1, bulletCount: 1, bulletSpread: 0, speed: 1 };
-            bullets = [];
-            enemies = [];
-            enemyBullets = [];
-            particles = [];
-            enemyInterval = gameConfig.enemySpawn;
-            shootInterval = gameConfig.fireRate;
-            
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('gameOverScreen').classList.add('hidden');
-            document.getElementById('configScreen').classList.add('hidden');
-            document.getElementById('skinScreen').classList.add('hidden');
-            document.getElementById('ui').classList.remove('hidden');
-            
-            player.x = canvas.width / 2;
-            player.y = canvas.height - 150;
-            
-            updateUI();
-            initGameStars();
-            gameLoop();
-        }
-        
-        function gameOver() {
-            stopBGM();
-            saveDailyQuests();
-
-            gameRunning = false;
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('earnedGold').textContent = gold;
-            document.getElementById('gameOverScreen').classList.remove('hidden');
-            document.getElementById('ui').classList.add('hidden');
-        }
-        
-        // 事件绑定
-        document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('restartBtn').addEventListener('click', startGame);
-        document.getElementById('menuBtn').addEventListener('click', () => {
-            document.getElementById('gameOverScreen').classList.add('hidden');
-            document.getElementById('startScreen').classList.remove('hidden');
-        });
-        
-        // 配置界面
-        document.getElementById('configBtn').addEventListener('click', () => {
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('configScreen').classList.remove('hidden');
-            loadConfig();
-        });
-        
-        document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
-        document.getElementById('resetConfigBtn').addEventListener('click', resetConfig);
-        document.getElementById('closeConfigBtn').addEventListener('click', () => {
-            document.getElementById('configScreen').classList.add('hidden');
-            document.getElementById('startScreen').classList.remove('hidden');
-        });
-        
-        // 滑块实时更新
-        document.getElementById('cfg_playerSpeed').addEventListener('input', (e) => {
-            document.getElementById('cfg_playerSpeed_val').textContent = e.target.value;
-        });
-        document.getElementById('cfg_fireRate').addEventListener('input', (e) => {
-            document.getElementById('cfg_fireRate_val').textContent = e.target.value;
-        });
-        document.getElementById('cfg_enemySpawn').addEventListener('input', (e) => {
-            document.getElementById('cfg_enemySpawn_val').textContent = e.target.value;
-        });
-        
-        // 皮肤界面
-        document.getElementById('skinBtn').addEventListener('click', () => {
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('skinScreen').classList.remove('hidden');
-            loadSkin();
-        });
-        
-        document.getElementById('saveSkinBtn').addEventListener('click', saveSkin);
-        document.getElementById('closeSkinBtn').addEventListener('click', () => {
-            document.getElementById('skinScreen').classList.add('hidden');
-            document.getElementById('startScreen').classList.remove('hidden');
-        });
-        
-        // 帮助
-        document.getElementById('helpBtn').addEventListener('click', () => {
-            alert('🎮 游戏说明\n\n👆 触摸/鼠标控制飞机移动\n🔫 自动发射子弹\n⭐ 击破敌机获得经验升级\n💰 金币永久累积\n⚙️ 可以配置数值\n🎨 可以更换皮肤');
-        });
-        
-        // 初始化
-        loadConfig();
+        window.onload = function() { Game.init(); };
     </script>
 </body>
 </html>
